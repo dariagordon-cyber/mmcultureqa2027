@@ -1,0 +1,17 @@
+# Data and generated results
+/data/
+/results/
+
+# Local dependencies and model cache
+/container_pkgs/
+/hf_cache/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Job logs
+*.out
+
+# Local backup
+/inference_backup.py
