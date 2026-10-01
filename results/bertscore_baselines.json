@@ -1,0 +1,24 @@
+{
+  "metric": "BERTScore F1",
+  "lang": "en",
+  "idf": false,
+  "rescale_with_baseline": false,
+  "runs": {
+    "gemma_nonthinking": {
+      "n": 1000,
+      "bertscore_f1": 0.9251328110694885
+    },
+    "gemma_thinking": {
+      "n": 1000,
+      "bertscore_f1": 0.9249897003173828
+    },
+    "qwen_nonthinking": {
+      "n": 1000,
+      "bertscore_f1": 0.9140812158584595
+    },
+    "qwen_thinking": {
+      "n": 1000,
+      "bertscore_f1": 0.9002417922019958
+    }
+  }
+}
