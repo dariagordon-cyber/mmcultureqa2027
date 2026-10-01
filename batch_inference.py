@@ -159,9 +159,12 @@ def main():
 
     processed = 0
 
-    with input_path.open("r", encoding="utf-8") as input_file, \
-         output_path.open("a", encoding="utf-8") as output_file:
+    # 1. Collect all inputs first.
+    # vLLM will handle the actual GPU batching internally.
+    prompts_and_data = []
+    metadata = []
 
+    with input_path.open("r", encoding="utf-8") as input_file:
         for line in input_file:
             item = json.loads(line)
             example_id = item["id"]
@@ -175,6 +178,7 @@ def main():
             image_path = input_path.parent / item["image"]
 
             try:
+                # Keep images in CPU RAM until vLLM processes them.
                 image = Image.open(image_path).convert("RGB")
 
                 messages = build_messages(item["question"])
@@ -184,43 +188,60 @@ def main():
                     args.thinking,
                 )
 
-                outputs = llm.generate(
-                    {
-                        "prompt": prompt,
-                        "multi_modal_data": {"image": image},
-                    },
-                    sampling_params=sampling_params,
-                )
-
-                raw_text = outputs[0].outputs[0].text
-                prediction = clean_output(raw_text)
-
-                result = {
-                    "id": example_id,
-                    "image": item["image"],
-                    "country": item.get("country"),
-                    "category": item.get("category"),
-                    "subcategory": item.get("subcategory"),
-                    "question": item["question"],
-                    "reference": item.get("answer"),
-                    "model": model_id,
-                    "thinking": args.thinking,
-                    "prediction": prediction,
-                }
-
-                output_file.write(
-                    json.dumps(result, ensure_ascii=False) + "\n"
-                )
-                output_file.flush()
-
+                prompts_and_data.append({
+                    "prompt": prompt,
+                    "multi_modal_data": {"image": image},
+                })
+                metadata.append(item)
                 processed += 1
-                print(
-                    f"[{processed}] {example_id[:10]}... "
-                    f"Prediction: {prediction}"
-                )
 
             except Exception as exc:
-                print(f"ERROR on {example_id}: {exc}")
+                print(f"ERROR loading {example_id}: {exc}")
+
+    print(
+        f"Starting batched generation for "
+        f"{len(prompts_and_data)} examples..."
+    )
+
+    if not prompts_and_data:
+        print("No new examples to process.")
+        return
+
+    # 2. One generate() call.
+    # vLLM handles continuous batching internally.
+    outputs = llm.generate(
+        prompts_and_data,
+        sampling_params=sampling_params,
+    )
+
+    # 3. Save results.
+    with output_path.open("a", encoding="utf-8") as output_file:
+        for item, output in zip(metadata, outputs):
+            example_id = item["id"]
+            raw_text = output.outputs[0].text
+            prediction = clean_output(raw_text)
+
+            result = {
+                "id": example_id,
+                "image": item["image"],
+                "country": item.get("country"),
+                "category": item.get("category"),
+                "subcategory": item.get("subcategory"),
+                "question": item["question"],
+                "reference": item.get("answer"),
+                "model": model_id,
+                "thinking": args.thinking,
+                "prediction": prediction,
+            }
+
+            output_file.write(
+                json.dumps(result, ensure_ascii=False) + "\n"
+            )
+
+            print(
+                f"[saved] {example_id[:10]}... "
+                f"Prediction: {prediction}"
+            )
 
     print(f"Finished. New examples processed: {processed}")
 
