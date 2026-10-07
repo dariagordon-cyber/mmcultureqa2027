@@ -39,5 +39,4 @@ Correct and Unverifiable answers have error_type = none.
 | unsupported_inference_hallucination | 0 | 2 |
 | omission_incomplete_answer | 7 | 4 |
 
-These are the current saved labels. Some uncertain cases may
-require review with the images before drawing stronger conclusions.
+
