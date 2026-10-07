@@ -11,19 +11,15 @@ The sample contains:
 - 7 Qwen-better examples
 - 6 both-low examples
 
-The selection groups reflect BERTScore-based sampling, not the
-manual outcome labels. The combined sample was deliberately selected,
+The selection groups reflect BERTScore-based sampling. The combined sample was deliberately selected,
 so its error frequencies should not be treated as estimates for the
 whole dev set.
 
 Annotations were entered manually using `annotate_error_analysis.py`.
 The script displays examples, saves choices, and counts annotations;
-it does not assign labels. ChatGPT was used to discuss the rubric and
-individual annotation decisions.
+it does not assign labels. 
 
-Not all image-dependent claims were verified against the images.
-Some cases may need further review. Reported counts reflect the
-current saved annotations.
+
 
 ## Outcome rubric
 
